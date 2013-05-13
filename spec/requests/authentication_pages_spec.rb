@@ -9,10 +9,16 @@ describe "Authentication" do
 
     it { should have_selector('h1',    text: 'Sign in') }
     it { should have_selector('title', text: 'Sign in') }
+    
   end
 
   describe "signin" do
     before { visit signin_path }
+
+    describe "verify no Profile and Settings link without signing in" do
+        it { should_not have_link('Profile') }
+        it { should_not have_link('Settings') }
+      end
 
     describe "with invalid information" do
       before { click_button "Sign in" }
@@ -20,14 +26,18 @@ describe "Authentication" do
       it { should have_selector('title', text: 'Sign in') }
       it { should have_error_message('Invalid') }
 
+
       describe "after visiting another page" do
         before { click_link "Home" }
         it { should_not have_selector('div.alert.alert-error') }
       end
+
+
     end
 
     describe "with valid information" do
       let(:user) { FactoryGirl.create(:user) }
+
       before { sign_in user }
 
       it { should have_selector('title', text: user.name) }
@@ -55,7 +65,9 @@ describe "Authentication" do
       describe "when attempting to visit a protected page" do
         before do
           visit edit_user_path(user)
-          sign_in user 
+          fill_in "Email",    with: user.email
+          fill_in "Password", with: user.password
+          click_button "Sign in"
         end
 
         describe "after signing in" do
@@ -63,8 +75,22 @@ describe "Authentication" do
           it "should render the desired protected page" do
             page.should have_selector('title', text: 'Edit user')
           end
+
+          describe "when signing in again" do
+            before do
+              delete signout_path
+              visit signin_path
+              fill_in "Email",    with: user.email
+              fill_in "Password", with: user.password
+              click_button "Sign in"
+            end
+
+            it "should render the default (profile) page" do
+              page.should have_selector('title', text: user.name) 
+            end
+          end
         end
-      end
+      end  
 
       describe "in the Users controller" do
 
@@ -109,6 +135,18 @@ describe "Authentication" do
 
       describe "submitting a DELETE request to the Users#destroy action" do
         before { delete user_path(user) }
+        specify { response.should redirect_to(root_path) }        
+      end
+    end
+
+
+    describe "as admin user" do
+      let(:admin) { FactoryGirl.create(:admin) }
+
+      before { sign_in admin }
+
+      describe "submitting a DELETE request to your own user" do
+        before { delete user_path(admin) }
         specify { response.should redirect_to(root_path) }        
       end
     end
