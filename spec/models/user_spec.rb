@@ -45,6 +45,7 @@ describe User do
   it { should respond_to(:password) }
   it { should respond_to(:password_confirmation) }
   it { should respond_to(:authenticate) }
+  it { should respond_to(:microposts) }
 
   describe "accessible attributes" do
     it "should not allow access to admin" do
