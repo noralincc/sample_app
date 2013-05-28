@@ -6,11 +6,11 @@ class UsersController < ApplicationController
 
   def show
     @user = User.find(params[:id])
+    @microposts = @user.microposts.paginate(page: params[:page])
   end
 
   def new
     redirect_to root_path if signed_in?
-
   	@user = User.new
   end
 
@@ -45,6 +45,7 @@ class UsersController < ApplicationController
   def index
     @users = User.paginate(page: params[:page])
   end
+  
 
   def destroy
     @user = User.find(params[:id])
