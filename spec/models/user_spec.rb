@@ -77,7 +77,7 @@ describe User do
     it { should_not be_valid }
   end
 
-   describe "when email format is invalid" do
+  describe "when email format is invalid" do
     it "should be invalid" do
       addresses = %w[user@foo,com user_at_foo.org example.user@foo.
                      foo@bar_baz.com foo@bar+baz.com]
@@ -144,8 +144,8 @@ describe User do
     end
   end
 
-    describe "email address with mixed case" do
-      let(:mixed_case_email) { "Foo@ExAMPle.CoM" }
+  describe "email address with mixed case" do
+    let(:mixed_case_email) { "Foo@ExAMPle.CoM" }
 
       it "should be saved as all lower-case" do
       @user.email = mixed_case_email
@@ -153,5 +153,30 @@ describe User do
       @user.reload.email.should == mixed_case_email.downcase
     end
   end
+  
+  describe "micropost associations" do
+
+    before { @user.save }
+    let!(:older_micropost) do 
+      FactoryGirl.create(:micropost, user: @user, created_at: 1.day.ago)
+    end
+    let!(:newer_micropost) do
+      FactoryGirl.create(:micropost, user: @user, created_at: 1.hour.ago)
+    end
+
+    it "should have the right microposts in the right order" do
+      expect(@user.microposts.to_a).to eq [newer_micropost, older_micropost]
+    end
+    
+    it "should destroy associated microposts" do
+      microposts = @user.microposts.to_a
+      @user.destroy
+      expect(microposts).not_to be_empty
+      microposts.each do |micropost|
+        expect(Micropost.where(id: micropost.id)).to be_empty
+      end
+    end
+  end
+  
   
 end
