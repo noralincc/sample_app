@@ -27,6 +27,7 @@ describe "Micropost pages" do
       before { fill_in 'micropost_content', with: "Lorem ipsum" }
       it "should create a micropost" do
         expect { click_button "Post" }.to change(Micropost, :count).by(1)
+        page.should have_content('1 micropost')
       end
     end
   end
